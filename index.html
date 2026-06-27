@@ -648,4 +648,200 @@ const QUESTIONS = [
     exp: "<code>{}</code> without any key-value pairs creates an empty <strong>dict</strong>, not a set. To create an empty set, use <code>set()</code>."
   },
   {
-    q: "Which function converts a string t
+    q: "Which function converts a string to an integer in Python?",
+    opts: ["<code>str()</code>", "<code>float()</code>", "<code>int()</code>", "<code>num()</code>"],
+    ans: 2,
+    exp: "<code>int('42')</code> converts the string <code>'42'</code> to the integer <code>42</code>. <code>str()</code> does the opposite."
+  },
+  {
+    q: "What is the output of <code>print('ha' * 3)</code>?",
+    opts: ["<code>hahaha</code>", "<code>ha ha ha</code>", "<code>ha3</code>", "Error"],
+    ans: 0,
+    exp: "The <code>*</code> operator on strings performs <strong>repetition</strong>. <code>'ha' * 3</code> → <code>'hahaha'</code>."
+  },
+  {
+    q: "Which of the following is used to inherit a class in Python?",
+    opts: ["<code>class Child::Parent</code>", "<code>class Child extends Parent</code>", "<code>class Child(Parent)</code>", "<code>class Child inherits Parent</code>"],
+    ans: 2,
+    exp: "Python uses <strong>parentheses</strong> to inherit: <code>class Child(Parent):</code> — this is how you define a subclass."
+  }
+];
+
+let currentQ = 0;
+let score = 0;
+let skipped = 0;
+let wrongCount = 0;
+let answered = false;
+let userAnswers = [];
+let timerInterval = null;
+let secondsLeft = 25 * 60;
+let timeUsed = 0;
+
+function startQuiz() {
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('quiz-area').style.display = 'block';
+  startTimer();
+  loadQuestion();
+}
+
+function startTimer() {
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    secondsLeft--;
+    timeUsed++;
+    updateTimerDisplay();
+    if (secondsLeft <= 0) {
+      clearInterval(timerInterval);
+      showResult(true);
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(secondsLeft / 60);
+  const s = secondsLeft % 60;
+  const el = document.getElementById('timer');
+  el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el.className = 'timer-display';
+  if (secondsLeft <= 300 && secondsLeft > 60) el.classList.add('warning');
+  if (secondsLeft <= 60) el.classList.add('danger');
+}
+
+function loadQuestion() {
+  answered = false;
+  const q = QUESTIONS[currentQ];
+  const total = QUESTIONS.length;
+
+  document.getElementById('q-number').textContent = `Q ${String(currentQ+1).padStart(2,'0')} / ${total}`;
+  document.getElementById('q-text').innerHTML = q.q;
+
+  const pct = Math.round((currentQ / total) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = `Question ${currentQ+1} of ${total}`;
+  document.getElementById('prog-pct').textContent = pct + '%';
+
+  const wrap = document.getElementById('options-wrap');
+  wrap.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'option';
+    div.innerHTML = `<span class="opt-letter">${['A','B','C','D'][i]}</span><span class="opt-text">${opt}</span>`;
+    div.onclick = () => selectOption(i, div);
+    wrap.appendChild(div);
+  });
+
+  document.getElementById('explanation').className = 'explanation';
+  document.getElementById('explanation').innerHTML = '';
+  document.getElementById('next-btn').disabled = true;
+  document.getElementById('skip-btn').disabled = false;
+  document.getElementById('skip-btn').textContent = 'Skip';
+}
+
+function selectOption(idx, el) {
+  if (answered) return;
+  answered = true;
+
+  const q = QUESTIONS[currentQ];
+  const opts = document.querySelectorAll('.option');
+  opts.forEach(o => o.classList.add('disabled'));
+
+  if (idx === q.ans) {
+    el.classList.add('correct');
+    score++;
+  } else {
+    el.classList.add('wrong');
+    opts[q.ans].classList.add('correct');
+    wrongCount++;
+  }
+
+  userAnswers[currentQ] = idx;
+
+  const expEl = document.getElementById('explanation');
+  expEl.innerHTML = q.exp;
+  expEl.classList.add('show');
+
+  document.getElementById('next-btn').disabled = false;
+  document.getElementById('skip-btn').disabled = true;
+}
+
+function nextQuestion(counted) {
+  if (!answered && !counted) {
+    userAnswers[currentQ] = -1;
+    skipped++;
+  }
+  currentQ++;
+  if (currentQ >= QUESTIONS.length) {
+    clearInterval(timerInterval);
+    showResult(false);
+  } else {
+    loadQuestion();
+  }
+}
+
+function showResult(timeUp) {
+  document.getElementById('quiz-area').style.display = 'none';
+  const rs = document.getElementById('result-screen');
+  rs.style.display = 'block';
+
+  const pct = Math.round((score / QUESTIONS.length) * 100);
+  let emoji = '😢', label = 'Keep Practicing!', color = 'var(--red)';
+  if (pct >= 80) { emoji = '🏆'; label = 'Excellent!'; color = 'var(--py-yellow)'; }
+  else if (pct >= 60) { emoji = '👍'; label = 'Good Job!'; color = 'var(--py-blue)'; }
+  else if (pct >= 40) { emoji = '📚'; label = 'Getting There!'; color = '#ff9f43'; }
+
+  document.getElementById('res-emoji').textContent = emoji;
+  document.getElementById('res-grade').style.color = color;
+  document.getElementById('res-grade').textContent = pct + '%';
+  document.getElementById('res-label').textContent = label;
+  document.getElementById('res-sub').textContent = timeUp
+    ? "Time's up! You scored " + score + " out of " + QUESTIONS.length + "."
+    : "You completed the quiz with " + formatTime(secondsLeft) + " remaining.";
+
+  document.getElementById('st-correct').textContent = score;
+  document.getElementById('st-wrong').textContent   = wrongCount;
+  document.getElementById('st-skip').textContent    = skipped + (QUESTIONS.length - currentQ);
+  document.getElementById('st-time').textContent    = timeUp ? '0:00' : formatTime(secondsLeft);
+
+  // Build review
+  const rl = document.getElementById('review-list');
+  rl.innerHTML = '';
+  QUESTIONS.forEach((q, i) => {
+    const ua = userAnswers[i];
+    const correct = ua === q.ans;
+    const div = document.createElement('div');
+    div.className = 'review-item ' + (ua === undefined || ua === -1 ? '' : correct ? 'r-correct' : 'r-wrong');
+    const tagHtml = ua === undefined || ua === -1
+      ? '<span class="tag" style="background:rgba(122,127,154,0.15);color:var(--muted)">Skipped</span>'
+      : correct
+        ? '<span class="tag tag-c">✓ Correct</span>'
+        : '<span class="tag tag-w">✗ Wrong</span>';
+    div.innerHTML = `
+      <div class="review-q">${tagHtml} Q${i+1}: ${q.q}</div>
+      ${ua !== undefined && ua !== -1 && !correct ? `<div class="review-your" style="color:var(--red)">Your answer: ${['A','B','C','D'][ua]}. ${q.opts[ua]}</div>` : ''}
+      ${!correct ? `<div class="review-correct-ans">✓ Correct: ${['A','B','C','D'][q.ans]}. ${q.opts[q.ans]}</div>` : ''}
+    `;
+    rl.appendChild(div);
+  });
+}
+
+function formatTime(s) {
+  return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+}
+
+function toggleReview() {
+  const s = document.getElementById('review-section');
+  s.style.display = s.style.display === 'none' ? 'block' : 'none';
+}
+
+function restartQuiz() {
+  currentQ = 0; score = 0; skipped = 0; wrongCount = 0;
+  answered = false; userAnswers = []; secondsLeft = 25 * 60; timeUsed = 0;
+  clearInterval(timerInterval);
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('quiz-area').style.display = 'block';
+  startTimer();
+  loadQuestion();
+}
+</script>
+</body>
+</html>
