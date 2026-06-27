@@ -1,1 +1,651 @@
-rosh
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Quiz — Test Your Skills</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3352;
+    --py-yellow: #ffd43b;
+    --py-blue: #4da6ff;
+    --green: #3ecf8e;
+    --red: #ff5c5c;
+    --text: #e8eaf0;
+    --muted: #7a7f9a;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+  }
+
+  /* ── Header ── */
+  .header {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .snake-icon {
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .brand-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--py-yellow);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── Timer ── */
+  .timer-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+  }
+
+  .timer-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .timer-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--py-yellow);
+    min-width: 52px;
+    text-align: right;
+    transition: color 0.3s;
+  }
+
+  .timer-display.warning { color: #ff9f43; }
+  .timer-display.danger  { color: var(--red); animation: pulse 0.8s infinite; }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  /* ── Progress ── */
+  .progress-bar-wrap {
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: 6px;
+  }
+
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 5px;
+    background: var(--surface2);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--py-blue), var(--py-yellow));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+
+  /* ── Card ── */
+  .card {
+    width: 100%;
+    max-width: 720px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    margin-top: 14px;
+  }
+
+  .q-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--py-blue);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .q-text {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.55;
+    color: var(--text);
+    margin-bottom: 26px;
+  }
+
+  /* code inside question */
+  .q-text code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--surface2);
+    color: var(--py-yellow);
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-size: 14px;
+  }
+
+  /* ── Options ── */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface2);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: border-color 0.18s, background 0.18s, transform 0.12s;
+    user-select: none;
+  }
+
+  .option:hover:not(.disabled) {
+    border-color: var(--py-blue);
+    transform: translateX(3px);
+  }
+
+  .opt-letter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    width: 22px;
+    flex-shrink: 0;
+    transition: color 0.18s;
+  }
+
+  .opt-text {
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .opt-text code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(255,255,255,0.06);
+    color: var(--py-yellow);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+
+  /* states */
+  .option.selected {
+    border-color: var(--py-blue);
+    background: rgba(77,166,255,0.08);
+  }
+  .option.selected .opt-letter { color: var(--py-blue); }
+
+  .option.correct {
+    border-color: var(--green);
+    background: rgba(62,207,142,0.1);
+  }
+  .option.correct .opt-letter { color: var(--green); }
+
+  .option.wrong {
+    border-color: var(--red);
+    background: rgba(255,92,92,0.1);
+  }
+  .option.wrong .opt-letter { color: var(--red); }
+
+  .option.disabled { cursor: default; }
+
+  /* ── Explanation ── */
+  .explanation {
+    margin-top: 18px;
+    padding: 14px 18px;
+    background: rgba(77,166,255,0.07);
+    border-left: 3px solid var(--py-blue);
+    border-radius: 0 8px 8px 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: #b0b8d8;
+    display: none;
+  }
+
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--py-blue); }
+
+  /* ── Buttons ── */
+  .btn-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 11px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.12s;
+  }
+
+  .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+
+  .btn-primary {
+    background: var(--py-yellow);
+    color: #111;
+  }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  /* ── Start Screen ── */
+  #start-screen {
+    width: 100%;
+    max-width: 720px;
+    text-align: center;
+    padding: 48px 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .start-emoji { font-size: 64px; margin-bottom: 20px; }
+
+  .start-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--py-yellow);
+    margin-bottom: 10px;
+  }
+
+  .start-sub {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+
+  .info-grid {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 36px;
+  }
+
+  .info-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 22px;
+    text-align: center;
+    min-width: 110px;
+  }
+
+  .info-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--py-yellow);
+  }
+
+  .info-lbl {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+  }
+
+  /* ── Result Screen ── */
+  #result-screen {
+    width: 100%;
+    max-width: 720px;
+    text-align: center;
+    display: none;
+  }
+
+  .result-hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 40px 32px;
+    margin-bottom: 16px;
+  }
+
+  .result-emoji { font-size: 56px; margin-bottom: 16px; }
+
+  .result-grade {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 60px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .result-label {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .result-sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+
+  .stat-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .stat-box {
+    flex: 1;
+    min-width: 100px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  .stat-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    font-weight: 700;
+  }
+
+  .stat-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
+
+  .review-list {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: left;
+    max-height: 340px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .review-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .review-item.r-correct { border-color: rgba(62,207,142,0.4); }
+  .review-item.r-wrong   { border-color: rgba(255,92,92,0.35); }
+
+  .review-q { font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .review-your { font-size: 12px; }
+  .review-correct-ans { font-size: 12px; color: var(--green); }
+  .tag { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; margin-right: 6px; }
+  .tag-c { background: rgba(62,207,142,0.15); color: var(--green); }
+  .tag-w { background: rgba(255,92,92,0.15); color: var(--red); }
+
+  #quiz-area { display: none; width: 100%; max-width: 720px; }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+</style>
+</head>
+<body>
+
+<!-- ══ START SCREEN ══ -->
+<div id="start-screen">
+  <div class="start-emoji">🐍</div>
+  <div class="start-title">Python Quiz</div>
+  <p class="start-sub">Test your Python knowledge — from basics to tricky edge cases.<br>25 questions. One chance. Clock's ticking.</p>
+  <div class="info-grid">
+    <div class="info-box"><div class="info-val">25</div><div class="info-lbl">Questions</div></div>
+    <div class="info-box"><div class="info-val">25:00</div><div class="info-lbl">Total Time</div></div>
+    <div class="info-box"><div class="info-val">+1</div><div class="info-lbl">Per Correct</div></div>
+    <div class="info-box"><div class="info-val">MCQ</div><div class="info-lbl">Format</div></div>
+  </div>
+  <button class="btn btn-primary" onclick="startQuiz()" style="padding:14px 48px;font-size:16px;">Start Quiz →</button>
+</div>
+
+<!-- ══ QUIZ AREA ══ -->
+<div id="quiz-area">
+  <div class="header">
+    <div class="brand">
+      <span class="snake-icon">🐍</span>
+      <span class="brand-text">Python Quiz</span>
+    </div>
+    <div class="timer-wrap">
+      <span class="timer-label">Time</span>
+      <div class="timer-display" id="timer">25:00</div>
+    </div>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-meta">
+      <span id="prog-label">Question 1 of 25</span>
+      <span id="prog-pct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="prog-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q-number" id="q-number">Q 01 / 25</div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="options-wrap"></div>
+    <div class="explanation" id="explanation"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="skip-btn" onclick="nextQuestion(false)">Skip</button>
+      <button class="btn btn-primary"   id="next-btn" onclick="nextQuestion(true)" disabled>Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RESULT SCREEN ══ -->
+<div id="result-screen">
+  <div class="result-hero">
+    <div class="result-emoji" id="res-emoji">🎉</div>
+    <div class="result-grade" id="res-grade"></div>
+    <div class="result-label" id="res-label"></div>
+    <div class="result-sub"  id="res-sub"></div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-val" id="st-correct" style="color:var(--green)"></div><div class="stat-lbl">Correct</div></div>
+      <div class="stat-box"><div class="stat-val" id="st-wrong"   style="color:var(--red)"></div><div class="stat-lbl">Wrong</div></div>
+      <div class="stat-box"><div class="stat-val" id="st-skip"    style="color:var(--muted)"></div><div class="stat-lbl">Skipped</div></div>
+      <div class="stat-box"><div class="stat-val" id="st-time"    style="color:var(--py-blue)"></div><div class="stat-lbl">Time Left</div></div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px;">
+    <button class="btn btn-primary"   onclick="restartQuiz()">Try Again</button>
+    <button class="btn btn-secondary" onclick="toggleReview()">Review Answers</button>
+  </div>
+
+  <div id="review-section" style="display:none">
+    <div class="review-list" id="review-list"></div>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    q: "What is the output of <code>print(type([]))</code>?",
+    opts: ["<code>&lt;class 'list'&gt;</code>", "<code>&lt;class 'array'&gt;</code>", "<code>&lt;class 'tuple'&gt;</code>", "<code>&lt;class 'dict'&gt;</code>"],
+    ans: 0,
+    exp: "<strong>[ ]</strong> creates an empty <strong>list</strong> in Python. Its type is <code>list</code>."
+  },
+  {
+    q: "Which keyword is used to define a function in Python?",
+    opts: ["<code>func</code>", "<code>def</code>", "<code>define</code>", "<code>function</code>"],
+    ans: 1,
+    exp: "In Python, <strong>def</strong> is the keyword used to define a function — e.g., <code>def greet():</code>"
+  },
+  {
+    q: "What does <code>len('Python')</code> return?",
+    opts: ["5", "6", "7", "Error"],
+    ans: 1,
+    exp: "<code>len()</code> returns the number of characters. <strong>'Python'</strong> has 6 characters."
+  },
+  {
+    q: "Which of the following is an <strong>immutable</strong> data type in Python?",
+    opts: ["List", "Dictionary", "Set", "Tuple"],
+    ans: 3,
+    exp: "<strong>Tuples</strong> are immutable — once created, their elements cannot be changed. Lists, dicts, and sets are mutable."
+  },
+  {
+    q: "What is the output of <code>print(2 ** 3)</code>?",
+    opts: ["6", "8", "9", "5"],
+    ans: 1,
+    exp: "<code>**</code> is the <strong>exponentiation</strong> operator in Python. <code>2 ** 3 = 2³ = 8</code>."
+  },
+  {
+    q: "Which method is used to add an element at the end of a list?",
+    opts: ["<code>add()</code>", "<code>insert()</code>", "<code>append()</code>", "<code>extend()</code>"],
+    ans: 2,
+    exp: "<code>list.append(element)</code> adds an element to the <strong>end</strong> of the list. <code>extend()</code> adds multiple elements."
+  },
+  {
+    q: "What is the correct way to create a dictionary in Python?",
+    opts: ["<code>d = [key:value]</code>", "<code>d = (key:value)</code>", "<code>d = {key:value}</code>", "<code>d = &lt;key:value&gt;</code>"],
+    ans: 2,
+    exp: "Dictionaries use <strong>curly braces</strong> <code>{}</code> with <code>key: value</code> pairs."
+  },
+  {
+    q: "What does the <code>range(1, 6)</code> function generate?",
+    opts: ["1, 2, 3, 4, 5, 6", "1, 2, 3, 4, 5", "0, 1, 2, 3, 4, 5", "2, 3, 4, 5, 6"],
+    ans: 1,
+    exp: "<code>range(start, stop)</code> generates numbers from <code>start</code> up to but <strong>not including</strong> <code>stop</code>. So <code>range(1,6)</code> → 1, 2, 3, 4, 5."
+  },
+  {
+    q: "Which of these is used for single-line comments in Python?",
+    opts: ["<code>//</code>", "<code>/* */</code>", "<code>#</code>", "<code>--</code>"],
+    ans: 2,
+    exp: "Python uses the <strong>#</strong> symbol for single-line comments. Multi-line comments use triple quotes <code>\"\"\"...\"\"\"</code>."
+  },
+  {
+    q: "What is the output of <code>bool(0)</code>?",
+    opts: ["True", "False", "0", "None"],
+    ans: 1,
+    exp: "In Python, <code>0</code>, empty strings, empty lists, and <code>None</code> evaluate to <strong>False</strong>. Any non-zero number is <code>True</code>."
+  },
+  {
+    q: "What will <code>print(10 // 3)</code> output?",
+    opts: ["3.33", "3", "4", "Error"],
+    ans: 1,
+    exp: "<code>//</code> is <strong>floor division</strong> — it divides and rounds down. <code>10 // 3 = 3</code>."
+  },
+  {
+    q: "Which Python keyword is used to handle exceptions?",
+    opts: ["<code>catch</code>", "<code>error</code>", "<code>except</code>", "<code>handle</code>"],
+    ans: 2,
+    exp: "Python uses <code>try</code> / <strong>except</strong> for exception handling — unlike Java/C++ which use <code>catch</code>."
+  },
+  {
+    q: "How do you check if a key exists in a dictionary <code>d</code>?",
+    opts: ["<code>d.has(key)</code>", "<code>key in d</code>", "<code>d.contains(key)</code>", "<code>key.exists(d)</code>"],
+    ans: 1,
+    exp: "The <code>in</code> operator checks for key membership in a dictionary: <code>if key in d:</code> returns <code>True</code> if the key exists."
+  },
+  {
+    q: "What is a <strong>lambda</strong> function in Python?",
+    opts: ["A class method", "A built-in function", "An anonymous one-line function", "A loop construct"],
+    ans: 2,
+    exp: "<code>lambda</code> creates <strong>anonymous functions</strong> in a single line. E.g., <code>square = lambda x: x**2</code>."
+  },
+  {
+    q: "What does <code>list.pop()</code> do by default?",
+    opts: ["Removes first element", "Removes last element", "Removes all elements", "Returns the list length"],
+    ans: 1,
+    exp: "<code>pop()</code> without an argument removes and returns the <strong>last element</strong> of the list. <code>pop(0)</code> removes the first."
+  },
+  {
+    q: "What is the output of <code>print('Python'[0])</code>?",
+    opts: ["<code>P</code>", "<code>y</code>", "<code>n</code>", "Error"],
+    ans: 0,
+    exp: "Python uses 0-based indexing. <code>'Python'[0]</code> gives the <strong>first character</strong> → <code>P</code>."
+  },
+  {
+    q: "Which module is used to work with dates and times in Python?",
+    opts: ["<code>time_module</code>", "<code>clock</code>", "<code>datetime</code>", "<code>calendar_lib</code>"],
+    ans: 2,
+    exp: "The <strong>datetime</strong> module provides classes for working with dates and times. Use <code>import datetime</code>."
+  },
+  {
+    q: "What does <code>str.split()</code> return?",
+    opts: ["A string", "A tuple", "A set", "A list"],
+    ans: 3,
+    exp: "<code>str.split()</code> splits a string by whitespace (or a given delimiter) and returns a <strong>list</strong> of substrings."
+  },
+  {
+    q: "What is the purpose of <code>__init__</code> in a Python class?",
+    opts: ["To delete an object", "To initialize object attributes", "To define class methods", "To import modules"],
+    ans: 1,
+    exp: "<code>__init__</code> is a <strong>constructor method</strong> — it's called automatically when an object is created, and is used to initialize its attributes."
+  },
+  {
+    q: "Which of these creates a <strong>set</strong> in Python?",
+    opts: ["<code>s = [1, 2, 3]</code>", "<code>s = (1, 2, 3)</code>", "<code>s = {1, 2, 3}</code>", "<code>s = &lt;1, 2, 3&gt;</code>"],
+    ans: 2,
+    exp: "A <strong>set</strong> uses curly braces <code>{}</code> but without key-value pairs. Sets store unique elements only."
+  },
+  {
+    q: "What does <code>*args</code> allow in a function definition?",
+    opts: ["Keyword arguments only", "No arguments", "Variable number of positional arguments", "Default arguments"],
+    ans: 2,
+    exp: "<code>*args</code> allows a function to accept a <strong>variable number of positional arguments</strong>. They're passed in as a tuple inside the function."
+  },
+  {
+    q: "What is the output of <code>print(type({}))</code>?",
+    opts: ["<code>&lt;class 'set'&gt;</code>", "<code>&lt;class 'dict'&gt;</code>", "<code>&lt;class 'list'&gt;</code>", "<code>&lt;class 'tuple'&gt;</code>"],
+    ans: 1,
+    exp: "<code>{}</code> without any key-value pairs creates an empty <strong>dict</strong>, not a set. To create an empty set, use <code>set()</code>."
+  },
+  {
+    q: "Which function converts a string t
